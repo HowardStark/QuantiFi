@@ -34,5 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 	Debug.Println(activePcapManager.interfaceName)
-	activePcapManager.StartMonitor()
+	//go activePcapManager.StartMonitor()
+	activePcapManager.byteTotal = 1024
+	StartServer()
 }

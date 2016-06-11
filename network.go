@@ -48,7 +48,9 @@ type PcapManager struct {
 	addressRegex *regexp.Regexp
 	// peerList contains the hwids of the peers on the
 	// current network.
-	peerList map[string]bool
+	peerList map[string]int
+	// byteTotal for incoming packets
+	byteTotal int
 }
 
 // NewPcapManager builds a PcapManager from the given arguments
@@ -63,6 +65,7 @@ func NewPcapManager(interfaceName string, snapshotLen int, promiscuousMode bool,
 		promiscuousMode: promiscuousMode,
 		timeoutPacket:   timeoutPacket,
 		addressRegex:    regComp,
+		byteTotal:       0,
 	}
 	peerList, peerErr := pcapManager.GetPeerHwids()
 	if peerErr != nil {
@@ -121,9 +124,12 @@ func (pcapManager *PcapManager) parsePacket(packetInc gopacket.Packet) {
 	data := packetInc.String()
 	if strings.Contains(data, "Type=Data") {
 		result := pcapManager.addressRegex.FindAllStringSubmatch(data, 1)[0][1]
-		if pcapManager.peerList[result] {
-			Info.Println("Received packet for " + result)
-			Info.Println("Size: ", len(packetInc.Data()))
+		if _, ok := pcapManager.peerList[result]; ok {
+			byteLen := len(packetInc.Data())
+			Debug.Println("Received packet for " + result)
+			Debug.Println("Size: ", byteLen)
+			pcapManager.byteTotal = pcapManager.byteTotal + byteLen
+			pcapManager.peerList[result] = pcapManager.peerList[result] + byteLen
 		}
 	}
 }
@@ -166,9 +172,9 @@ func FindActiveInterface() (string, error) {
 
 // GetPeerHwids builds a string array of the mac addresses of all devices
 // that are with you on the network.
-func (pcapManager *PcapManager) GetPeerHwids() (map[string]bool, error) {
+func (pcapManager *PcapManager) GetPeerHwids() (map[string]int, error) {
 	Info.Println("Finding peer hwids...")
-	hwids := make(map[string]bool)
+	hwids := make(map[string]int)
 	cmdOut, cmdErr := exec.Command("/usr/sbin/arp", "-a").Output()
 	if cmdErr != nil {
 		return nil, cmdErr
@@ -179,7 +185,10 @@ func (pcapManager *PcapManager) GetPeerHwids() (map[string]bool, error) {
 			continue
 		}
 		parsed := strings.Split(line, " ")[3]
-		hwids[parsed] = true
+		if parsed == "ff:ff:ff:ff:ff:ff" {
+			continue
+		}
+		hwids[parsed] = 0
 	}
 	return hwids, nil
 }
