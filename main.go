@@ -28,6 +28,6 @@ func main() {
 		os.Exit(1)
 	}
 	activePcapManager = NewPcapManager(ifaceName, PcapDefaultSnapLen, PcapDefaultPromisc, PcapDefaultTimeout)
-	Info.Println(activePcapManager.interfaceName)
+	Debug.Println(activePcapManager.interfaceName)
 	activePcapManager.StartMonitor()
 }

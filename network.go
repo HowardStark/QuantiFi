@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -21,7 +22,7 @@ var (
 	// PcapDefaultSnapLen is set to 1024 for testing purposes, but
 	// will probably need to be increased since we are measuring the
 	// length of the packets.
-	PcapDefaultSnapLen int32 = 1024
+	PcapDefaultSnapLen int32 = 1048576
 )
 
 // PcapManager is a struct that encompasses all the functions needed
@@ -63,11 +64,20 @@ func (pcapManager *PcapManager) StartMonitor() {
 		return
 	}
 	Info.Println("Successfully opened pcap handle.")
+	defer fmt.Println(pcapManager.pcapHandle.Stats())
 	defer pcapManager.pcapHandle.Close()
 	Info.Println("Starting to parse packets...")
 	packetSource := gopacket.NewPacketSource(pcapManager.pcapHandle, pcapManager.pcapHandle.LinkType())
 	for packet := range packetSource.Packets() {
-		Debug.Println(packet)
+		Debug.Println("Got packet of len: ", len(packet.Data()))
+		Debug.Println(packet.Metadata().Length)
+		Debug.Println(packet.String())
+		stats, err := pcapManager.pcapHandle.Stats()
+		if err != nil {
+			Error.Println(err.Error())
+			continue
+		}
+		Debug.Println(stats.PacketsReceived)
 	}
 }
 
