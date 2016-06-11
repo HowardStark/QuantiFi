@@ -7,25 +7,37 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/google/gopacket/pcap"
 )
 
 var (
-	// DebugOut redirects debug logs to os.Stdout
+	// debugOut redirects debug logs to os.Stdout
 	debugOut io.Writer = os.Stdout
-	// InfoOut redirects debug logs to os.Stdout
+	// infoOut redirects debug logs to os.Stdout
 	infoOut = os.Stdout
-	// WarningOut redirects debug logs to os.Stdout
+	// warningOut redirects debug logs to os.Stdout
 	warningOut = os.Stdout
-	// ErrorOut redirects debug logs to os.Stdout
+	// errorOut redirects debug logs to os.Stdout
 	errorOut = os.Stderr
+	// iface is the active net interface
+	iface string
+	// snapshotLen is the maximum size that will be read from any packet
+	snapshotLen int32 = 1024
+	// promisc decides whether or not to put the interface into promiscuous mode
+	promisc = true
+	// timeout duration for the packet cutoff
+	timeout = 30 * time.Second
+	// handle provides an interface to the pcap handle
+	handle *pcap.Handle
 )
 
 func main() {
 	InitLog(debugOut, infoOut, warningOut, errorOut)
 	Info.Println("QuantiFi starting...")
-	iface, err := FindActiveInterface()
+	var err error
+	iface, err = FindActiveInterface()
 	if err != nil {
 		Error.Println(err.Error())
 		os.Exit(1)
