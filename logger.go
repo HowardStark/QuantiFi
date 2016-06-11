@@ -20,7 +20,7 @@ var (
 // pass in ioutil.Discard for that interface's output writer.
 func InitLog(debugOut, infoOut, warningOut, errorOut io.Writer) {
 	Debug = log.New(debugOut, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Info = log.New(debugOut, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Warning = log.New(debugOut, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
-	Error = log.New(debugOut, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Info = log.New(infoOut, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Warning = log.New(warningOut, "WARNING: ", log.Ldate|log.Ltime|log.Lshortfile)
+	Error = log.New(errorOut, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
