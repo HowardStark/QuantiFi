@@ -22,12 +22,17 @@ var (
 func main() {
 	InitLog(debugOut, infoOut, warningOut, errorOut)
 	Info.Println("QuantiFi starting...")
-	ifaceName, err := FindActiveInterface()
-	if err != nil {
-		Error.Println(err.Error())
+	ifaceName, ifaceErr := FindActiveInterface()
+	if ifaceErr != nil {
+		Error.Println(ifaceErr.Error())
 		os.Exit(1)
 	}
-	activePcapManager = NewPcapManager(ifaceName, PcapDefaultSnapLen, PcapDefaultPromisc, PcapDefaultTimeout)
+	var pcapManagerErr error
+	activePcapManager, pcapManagerErr = NewPcapManager(ifaceName, PcapDefaultSnapLen, PcapDefaultPromisc, PcapDefaultTimeout)
+	if pcapManagerErr != nil {
+		Error.Println(pcapManagerErr.Error())
+		os.Exit(1)
+	}
 	Debug.Println(activePcapManager.interfaceName)
 	activePcapManager.StartMonitor()
 }
