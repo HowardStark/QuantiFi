@@ -60,7 +60,7 @@ func NewPcapManager(interfaceName string, snapshotLen int, promiscuousMode bool,
 		return nil, regErr
 	}
 	pcapManager := &PcapManager{
-		interfaceName:   interfaceName,
+		interfaceName:   "wlan0",
 		snapshotLen:     snapshotLen,
 		promiscuousMode: promiscuousMode,
 		timeoutPacket:   timeoutPacket,
