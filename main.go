@@ -34,6 +34,8 @@ func main() {
 		os.Exit(1)
 	}
 	Debug.Println(activePcapManager.interfaceName)
-	go activePcapManager.StartMonitor()
-	StartServer()
+	activePcapManager.StartMonitor()
+	for {
+	}
+	//StartServer()
 }
