@@ -8,9 +8,11 @@ import (
 
 var (
 	// Port that the API will listen and serve on
-	Port = "1337"
+	Port = "9126"
 	// Response for the lastest json response on "/usage"
 	Response *Usage
+	// Interval for the JSON update in seconds
+	Interval time.Duration = 60
 )
 
 // Device represents a per-device json response
@@ -42,7 +44,7 @@ func StartServer() {
 	Error.Panicln(http.ListenAndServe(":"+Port, nil))
 }
 
-// BuildUsage builds the initial Usage item
+// BuildUsage constructs the core Usage struct
 func BuildUsage() *Usage {
 	usage := &Usage{
 		Devices: make(map[string]*Device),
@@ -61,7 +63,8 @@ func BuildUsage() *Usage {
 	return usage
 }
 
-// UpdateJSON using the interval constant
+// UpdateJSON adds a new history item to each of the connected
+// devices at the specified interval.
 func UpdateJSON() {
 	for {
 		for key, val := range Response.Devices {
@@ -71,7 +74,7 @@ func UpdateJSON() {
 			}
 			val.History = append(val.History, newHistory)
 		}
-		time.Sleep(30 * time.Second)
+		time.Sleep(Interval * time.Second)
 	}
 }
 
