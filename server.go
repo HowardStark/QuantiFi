@@ -15,24 +15,24 @@ var (
 
 // Device represents a per-device json response
 type Device struct {
-	Name    string
-	History []History
-	Total   int
+	Name    string    `json:"name"`
+	History []History `json:"history"`
+	Total   int       `json:"total"`
 }
 
 // History represents an item in the device history
 type History struct {
-	Time  int64
-	Total int
+	Time  int64 `json:"time"`
+	Total int   `json:"total"`
 }
 
 // Usage represents the core usage json response
 type Usage struct {
-	Devices map[string]*Device
-	Total   int
+	Devices map[string]*Device `json:"devices"`
+	Total   int                `json:"total"`
 }
 
-// StartServer Start the HTTP Server
+// StartServer starts the http server for the API
 func StartServer() {
 	Info.Println("Starting HTTP server...")
 	Info.Println("Building response...")
@@ -50,6 +50,7 @@ func BuildUsage() *Usage {
 	}
 	for key, val := range activePcapManager.peerList {
 		usage.Devices[key] = &Device{
+			Name: key,
 			History: []History{History{
 				Time:  time.Now().Unix(),
 				Total: val,
@@ -60,7 +61,7 @@ func BuildUsage() *Usage {
 	return usage
 }
 
-// UpdateJSON at set interval
+// UpdateJSON using the interval constant
 func UpdateJSON() {
 	for {
 		for key, val := range Response.Devices {
@@ -75,6 +76,7 @@ func UpdateJSON() {
 }
 
 func totalUsage(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	for key, val := range Response.Devices {
 		val.Total = activePcapManager.peerList[key]

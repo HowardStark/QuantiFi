@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	// PcapDefaultPromisc is true by default, since you should rarely
+	// PcapDefaultMonitor is true by default, since you should rarely
 	// need to not be in promiscuous mode.
-	PcapDefaultPromisc = true
+	PcapDefaultMonitor = true
 	// PcapDefaultTimeout is set to 30 seconds, solely because it
 	// seemed like a sensible default.
 	PcapDefaultTimeout = 30 * time.Second
@@ -35,9 +35,9 @@ type PcapManager struct {
 	interfaceName string
 	// snapshotLen is the cutoff size for the packets we intercept
 	snapshotLen int
-	// promiscuousMode sets whether or not to switch the active
-	// network interface to promiscuous mode.
-	promiscuousMode bool
+	// monitorMode sets whether or not to switch the active
+	// network interface to monitor mode.
+	monitorMode bool
 	// timeoutPacket is the amount of time we wait before giving
 	// up on a packet.
 	timeoutPacket time.Duration
@@ -46,26 +46,26 @@ type PcapManager struct {
 	// addressRegex is the compiled regex to find the address
 	// of the incoming recipient.
 	addressRegex *regexp.Regexp
-	// peerList contains the hwids of the peers on the
-	// current network.
+	// peerList maps the hwids of the peers on the
+	// current network to their data usage.
 	peerList map[string]int
-	// byteTotal for incoming packets
+	// byteTotal is the total number of bytes downloaded.
 	byteTotal int
 }
 
 // NewPcapManager builds a PcapManager from the given arguments
-func NewPcapManager(interfaceName string, snapshotLen int, promiscuousMode bool, timeoutPacket time.Duration) (*PcapManager, error) {
+func NewPcapManager(interfaceName string, snapshotLen int, monitorMode bool, timeoutPacket time.Duration) (*PcapManager, error) {
 	regComp, regErr := regexp.Compile(`Address1=([a-zA-Z0-9:]+)`)
 	if regErr != nil {
 		return nil, regErr
 	}
 	pcapManager := &PcapManager{
-		interfaceName:   "wlan0",
-		snapshotLen:     snapshotLen,
-		promiscuousMode: promiscuousMode,
-		timeoutPacket:   timeoutPacket,
-		addressRegex:    regComp,
-		byteTotal:       0,
+		interfaceName: interfaceName,
+		snapshotLen:   snapshotLen,
+		monitorMode:   monitorMode,
+		timeoutPacket: timeoutPacket,
+		addressRegex:  regComp,
+		byteTotal:     0,
 	}
 	peerList, peerErr := pcapManager.GetPeerHwids()
 	if peerErr != nil {
@@ -83,8 +83,7 @@ func (pcapManager *PcapManager) BuildHandle() error {
 	if inactiveErr != nil {
 		return inactiveErr
 	}
-
-	if monErr := inactive.SetRFMon(true); monErr != nil {
+	if monErr := inactive.SetRFMon(pcapManager.monitorMode); monErr != nil {
 		return monErr
 	}
 	if snapErr := inactive.SetSnapLen(pcapManager.snapshotLen); snapErr != nil {
@@ -190,6 +189,7 @@ func (pcapManager *PcapManager) GetPeerHwids() (map[string]int, error) {
 		}
 		hwids[parsed] = 0
 	}
+	Info.Println("Found peers: ", hwids)
 	return hwids, nil
 }
 

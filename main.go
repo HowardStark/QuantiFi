@@ -1,13 +1,10 @@
 package main
 
-import (
-	"io"
-	"os"
-)
+import "os"
 
 var (
 	// debugOut redirects debug logs to os.Stdout
-	debugOut io.Writer = os.Stdout
+	debugOut = os.Stdout
 	// infoOut redirects debug logs to os.Stdout
 	infoOut = os.Stdout
 	// warningOut redirects debug logs to os.Stdout
@@ -28,14 +25,12 @@ func main() {
 		os.Exit(1)
 	}
 	var pcapManagerErr error
-	activePcapManager, pcapManagerErr = NewPcapManager(ifaceName, PcapDefaultSnapLen, PcapDefaultPromisc, PcapDefaultTimeout)
+	activePcapManager, pcapManagerErr = NewPcapManager(ifaceName, PcapDefaultSnapLen, PcapDefaultMonitor, PcapDefaultTimeout)
 	if pcapManagerErr != nil {
 		Error.Println(pcapManagerErr.Error())
 		os.Exit(1)
 	}
 	Debug.Println(activePcapManager.interfaceName)
-	activePcapManager.StartMonitor()
-	for {
-	}
-	//StartServer()
+	go activePcapManager.StartMonitor()
+	StartServer()
 }
