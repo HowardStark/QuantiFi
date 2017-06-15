@@ -1,0 +1,115 @@
+<html>
+<head>
+	<title>Quanti-Fi</title>
+	<style type="text/css">
+	body {
+		color: white;
+		font-family: Arial;
+	}
+	* {
+		transition: 1s ease;
+	}
+	.back {
+		position: absolute;
+		top:0;
+		left:0;
+		background-color: red;
+		height: 100%;
+		width: 0;
+		z-index: -10;
+	}
+	.individuals {
+		position: absolute;
+		top:0;
+		right:0;
+		background-color: rgba(255, 255, 255, 0.5);
+		height: 100%;
+		width: 0;
+		z-index: -9;
+	}
+	.usage {
+		color: white;
+		font-family: 'Menlo';
+		font-size: 10vw;
+		position: absolute;
+		float: left;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+	body {
+		background-color: green;
+	}
+	.bottom {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		padding-left: 20px;
+		padding-bottom: 10px;
+	}
+	.top {
+		padding-left: 10px;
+		padding-top: 10px;
+	}
+	</style>
+</head>
+<body>
+	<div id="main">
+		<div class="usage">Loading...</div>
+		<div class="back"></div>
+		<div class="top"><b>Clients Observed:</b> <span class="clients">None</span></div>
+		<div class="bottom"><b>Data Cap:</b> <span class="data-cap"></span></div>
+	</div>
+	
+	<script>
+	'use strict';
+
+	const DATA_CAP = 20*1024*1024
+
+	let clientsList = document.getElementsByClassName('clients')[0]
+	let usageView = document.getElementsByClassName('usage')[0]
+	let backView = document.getElementsByClassName('back')[0]
+	let bottom = document.getElementsByClassName('bottom')[0]
+	let cap = document.getElementsByClassName('data-cap')[0]
+	let main = document.getElementById('main')
+	function update(){
+		console.log('updating')
+		fetch('http://localhost:1337/usage').then(x => {
+			return x.json()
+		}, e => {
+			console.log('error!')
+		}).then(x => {
+			console.log(x)
+			// x.devices = []
+			// let devices = x.devices.map(d => {
+			// 	return {hwid: d.hwid, usage: d.usage, percentage: d.usage/DATA_CAP}
+			// })
+			let clients = Object.keys(x.devices)
+			let totalUsage = x.total // x.total
+			let usagePercent = Math.min((totalUsage/DATA_CAP)*100, 100)
+			clientsList.innerHTML = "&emsp;" + clients.join("&emsp;&emsp;")
+			main.style['padding-left'] = usagePercent + '%'
+			usageView.innerText = bestSizeFormat(totalUsage) //x.userId
+			backView.style.width = usagePercent + '%'
+			bottom.style.left = usagePercent + '%'
+		})
+
+	}
+	setInterval(update, 1000)
+	cap.innerText = bestSizeFormat(DATA_CAP)	
+	update()
+	function bestSizeFormat(v){
+		if (v < 0) return ''
+		if (v < 1024) return round(v, 2) + ' B'
+		if (v < 1048576) return round(v/1024, 2) + ' KB'
+		if (v < 1073741824) return round(v/1048576, 2) + ' MB'
+		if (v < 1099511627776) return round(v/1073741824, 2) + ' GB'
+		else return v + ' B'
+	}
+	function round(x, y){
+		let v = x.toString().split('.')
+		if (v.length > 1) v[1] = v[1].substring(0, y)
+		return v.join('.')
+	}
+	</script>
+</body>
+</html>
